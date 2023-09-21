@@ -1,6 +1,7 @@
 package com.booking.api.dto;
 
 import com.booking.api.model.Gender;
+import com.booking.api.validations.GenderValidation.ValidGender;
 import com.booking.api.validations.UAENumberValidation.ValidUAEPhone;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -19,7 +20,7 @@ public class PatientDTO {
     @Size(max = 255, message = "Email can be upto to 255 characters long")
     private String email;
 
-    @NotBlank(message = "Phone number cannot be empty")
+    @NotBlank(message = "Phone number is required")
     @ValidUAEPhone()
     private String phone;
 
@@ -27,8 +28,10 @@ public class PatientDTO {
     @DateTimeFormat(pattern = "dd/MM/YYYY")
     private String dateOfBirth;
 
-
+    @NotBlank(message = "Gender field is required")
+    @ValidGender
     private Gender gender;
+
     private String medicalHistory;
 
 
