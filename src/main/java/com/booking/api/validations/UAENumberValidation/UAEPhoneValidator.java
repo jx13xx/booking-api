@@ -1,8 +1,5 @@
 package com.booking.api.validations.UAENumberValidation;
-
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-
+import jakarta.validation.ConstraintValidator;
 public class UAEPhoneValidator implements ConstraintValidator<ValidUAEPhone, String> {
 
     @Override
@@ -11,7 +8,7 @@ public class UAEPhoneValidator implements ConstraintValidator<ValidUAEPhone, Str
     }
 
     @Override
-    public boolean isValid(String value, ConstraintValidatorContext constraintValidatorContext) {
+    public boolean isValid(String value, jakarta.validation.ConstraintValidatorContext constraintValidatorContext) {
         return value != null  && value.matches("^971\\d{9}$");
     }
 }

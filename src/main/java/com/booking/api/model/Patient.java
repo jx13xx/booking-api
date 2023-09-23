@@ -1,8 +1,9 @@
 package com.booking.api.model;
 
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -18,7 +19,7 @@ public class Patient {
 
    private String patientPhone;
 
-   private Date patientDOB;
+   private LocalDate patientDateOfBirth;
 
    private Gender patientGender;
 

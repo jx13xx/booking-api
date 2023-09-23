@@ -1,11 +1,10 @@
 package com.booking.api.validations.GenderValidation;
 
 import com.booking.api.model.Gender;
+import jakarta.validation.ConstraintValidator;
+import static com.booking.api.model.Gender.isValidGenderValue;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-
-public class GenderValidator implements ConstraintValidator<ValidGender, Gender> {
+public class GenderValidator implements ConstraintValidator<ValidGender, String> {
 
     @Override
     public void initialize(ValidGender constraintAnnotation) {
@@ -13,7 +12,7 @@ public class GenderValidator implements ConstraintValidator<ValidGender, Gender>
     }
 
     @Override
-    public boolean isValid(Gender gender, ConstraintValidatorContext constraintValidatorContext) {
-        return gender != null;
+    public boolean isValid(String gender, jakarta.validation.ConstraintValidatorContext context) {
+        return gender != null && isValidGenderValue(Gender.valueOf(gender));
     }
 }
