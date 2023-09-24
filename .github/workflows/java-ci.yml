@@ -1,0 +1,27 @@
+name: Java CI
+
+on:
+  push: # Trigger the workflow on push events
+    branches:
+      - '*' # Run the workflow on all branches
+
+jobs:
+  build:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Maven
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'
+          maven-version: '3.8.7'
+          distribution: 'ubuntu'
+
+      - name: Build with Maven
+        run: mvn clean install
+
+      - name: Run Tests
+        run: mvn test
