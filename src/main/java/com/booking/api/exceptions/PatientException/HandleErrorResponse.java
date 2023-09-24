@@ -1,11 +1,11 @@
-package com.booking.api.exceptions.validation;
+package com.booking.api.exceptions.PatientException;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidationErrorHandler {
+public @interface HandleErrorResponse {
 }

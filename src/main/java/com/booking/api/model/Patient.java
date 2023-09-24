@@ -1,7 +1,10 @@
 package com.booking.api.model;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import lombok.*;
-import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.UUID;
@@ -9,9 +12,12 @@ import java.util.UUID;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Entity
 public class Patient {
 
-   private UUID patientID;
+   @Id
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long patientID;
 
    private String patientName;
 
