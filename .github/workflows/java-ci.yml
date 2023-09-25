@@ -1,0 +1,31 @@
+name: Java CI
+
+on:
+  push:
+    branches:
+      - '*' # Run on all branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11' # Use Java 11 that you have installed on your macOS system
+
+#      - name: Set up Maven
+#        run: |
+#          sudo apt-get update
+#          sudo apt-get install -y maven
+#        # Adjust this command if you want to use a specific version of Maven
+
+      - name: Build with Maven
+        run: mvn clean install # Adjust this command for your Maven build
+
+      - name: Run Tests
+        run: mvn test # Adjust this command for your Maven build
