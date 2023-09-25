@@ -3,7 +3,7 @@ name: Java CI
 on:
   push:
     branches:
-      - '*' # Run on all branch
+      - '*' # Run on all branches
 
 jobs:
   build:
@@ -11,18 +11,20 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Java
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
-          java-version: '11' # Use Java 11 that you have installed on your macOS system
+          java-version: '17' # Use Java 17 provided by temurin
+          distribution: 'temurin'
 
-#      - name: Set up Maven
-#        run: |
-#          sudo apt-get update
-#          sudo apt-get install -y maven
-#        # Adjust this command if you want to use a specific version of Maven
+      # If you need to set up Maven, uncomment the following lines
+      #- name: Set up Maven
+      #  run: |
+      #    sudo apt-get update
+      #    sudo apt-get install -y maven
+      #  # Adjust this command if you want to use a specific version of Maven
 
       - name: Build with Maven
         run: mvn clean install # Adjust this command for your Maven build
