@@ -18,7 +18,6 @@ jobs:
         with:
           java-version: '17'
           maven-version: '3.8.7'
-          distribution: 'ubuntu'
 
       - name: Build with Maven
         run: mvn clean install
