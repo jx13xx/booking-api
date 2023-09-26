@@ -1,6 +1,9 @@
 package com.booking.api.dto;
 
+import com.booking.api.model.Patient;
 import com.fasterxml.jackson.annotation.JsonInclude;
+
+import java.util.HashMap;
 
 public class PatientResponseDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -9,6 +12,8 @@ public class PatientResponseDTO {
     private String message;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer status;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private HashMap<String, String> patient;
 
     // Private constructor to enforce builder usage
     private PatientResponseDTO() {}
@@ -19,6 +24,10 @@ public class PatientResponseDTO {
 
     public String getMessage() {
         return message;
+    }
+
+    public HashMap<String, String> getPatient(){
+        return patient;
     }
 
     public Integer getStatus() {
@@ -41,6 +50,19 @@ public class PatientResponseDTO {
 
         public Builder withStatus(Integer status) {
             responseDTO.status = status;
+            return this;
+        }
+
+        public Builder withPatient(Patient patient){
+            HashMap<String, String> response = new HashMap<>();
+            response.put("id", patient.getPatientID().toString());
+            response.put("name", patient.getPatientName());
+            response.put("email", patient.getPatientEmail());
+            response.put("phone", patient.getPatientPhone());
+            response.put("gender", patient.getPatientGender().toString());
+            response.put("medicalHistory", patient.getPatientMedicalHistory());
+
+            responseDTO.patient = response;
             return this;
         }
 

@@ -12,8 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static com.booking.api.constants.Constants.PATIENT_ALREADY_EXITS;
-import static com.booking.api.constants.Constants.PATIENT_CREATED_SUCCESSFULLY;
+import static com.booking.api.constants.Constants.*;
 
 @Service
 public class PatientServiceImpl implements PatientServiceAPI {
@@ -42,7 +41,15 @@ public class PatientServiceImpl implements PatientServiceAPI {
 
     @Override
     public ResponseEntity<PatientResponseDTO> retrievePatient(String id) {
-        return null;
+        try {
+            Long patientId = Long.parseLong(id);
+            Optional<Patient> patient = patientRepository.findById(patientId);
+            return patient.map(p -> ResponseEntity.ok(buildResponseDTO(p)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildResponseDTO(PATIENT_NOT_FOUND)));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(buildResponseDTO("Invalid patient ID format"));
+        }
+
     }
 
     private Optional<Patient> getPatient(PatientDTO patientDTO) {
@@ -65,9 +72,16 @@ public class PatientServiceImpl implements PatientServiceAPI {
         return PatientResponseDTO.builder().withMessage(message).withId(patient.getPatientID().toString()).build();
     }
 
+    private PatientResponseDTO buildResponseDTO(Patient patient) {
+        return PatientResponseDTO.builder().withPatient(patient).withMessage(PATIENT_RETRIEVED).withStatus(200).build();
+    }
+
     private PatientResponseDTO buildResponseDTO(String message) {
         if(message.equals(PATIENT_ALREADY_EXITS)){
             return PatientResponseDTO.builder().withMessage(message).withStatus(409).build();
+        }
+        if(message.equals(PATIENT_NOT_FOUND)){
+            return PatientResponseDTO.builder().withMessage(message).withStatus(404).build();
         }
         return PatientResponseDTO.builder().withMessage(message).build();
     }
