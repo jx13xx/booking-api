@@ -1,7 +1,9 @@
 package com.booking.api.service;
 
+import com.booking.api.constants.Constants;
 import com.booking.api.dto.PatientDTO;
 import com.booking.api.dto.PatientResponseDTO;
+import com.booking.api.model.Gender;
 import com.booking.api.model.Patient;
 import com.booking.api.repository.PatientRepository;
 import com.booking.api.service.PatientService.PatientServiceImpl;
@@ -75,5 +77,36 @@ public class PatientServiceImplTest {
 
         assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
         assertNotNull(responseEntity.getBody());
+    }
+
+    @Test
+    public void test_retrievePatientSucces(){
+        String testPatientID = "14";
+        Patient patient = new Patient();
+        patient.setPatientID(Long.valueOf(testPatientID));
+        patient.setPatientGender(Gender.MALE);
+        patient.setPatientEmail("testmail@mail.com");
+        patient.setPatientPhone("9715292038");
+        patient.setPatientName("test name");
+
+        when(patientRepository.findById(patient.getPatientID())).thenReturn(Optional.of(patient));
+
+        PatientResponseDTO response =  patientService.retrievePatient(testPatientID).getBody();
+
+        assertEquals(200, response.getStatus());
+        assertEquals(Constants.PATIENT_RETRIEVED, response.getMessage());
+        assertEquals(patient.getPatientName(), response.getPatient().get("name"));
+        assertEquals(patient.getPatientEmail(), response.getPatient().get("email"));
+    }
+
+    @Test
+    public void test_retrievePatientNotSuccess(){
+        String testNotPatientID = "99";
+
+        when(patientRepository.findById(Long.valueOf(testNotPatientID))).thenReturn(Optional.empty());
+        PatientResponseDTO response = patientService.retrievePatient(testNotPatientID).getBody();
+
+        assertEquals(404, response.getStatus());
+        assertEquals(Constants.PATIENT_NOT_FOUND, response.getMessage());
     }
 }

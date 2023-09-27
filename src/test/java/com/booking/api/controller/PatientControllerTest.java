@@ -3,6 +3,8 @@ package com.booking.api.controller;
 import com.booking.api.constants.Constants;
 import com.booking.api.dto.PatientDTO;
 import com.booking.api.dto.PatientResponseDTO;
+import com.booking.api.model.Gender;
+import com.booking.api.model.Patient;
 import com.booking.api.service.PatientService.PatientServiceAPI;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -23,6 +25,7 @@ import java.time.LocalDate;
 
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -88,7 +91,7 @@ public class PatientControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJSON) // JSON representation of the patientDTO
                 .accept(MediaType.APPLICATION_JSON))
-            .andExpect(MockMvcResultMatchers.status().is2xxSuccessful())
+            .andExpect(status().is2xxSuccessful())
             .andReturn();
 
         // Validate the response
@@ -136,5 +139,61 @@ public class PatientControllerTest {
         assertEquals(Constants.PATIENT_ALREADY_EXITS, response.getMessage());
         assertEquals(403, response.getStatus());
 
+    }
+
+    @Test
+    public void shouldGive200ResponseIfPatientFound() throws Exception {
+        Patient patient = new Patient();
+        patient.setPatientID(Long.valueOf("1"));
+        patient.setPatientName("name");
+        patient.setPatientPhone("971527459148");
+        patient.setPatientEmail("test@mail.com");
+        patient.setPatientGender(Gender.MALE);
+        patient.setPatientDateOfBirth(LocalDate.now());
+
+        PatientResponseDTO patientResponseDTO = PatientResponseDTO.builder()
+            .withStatus(200)
+            .withMessage(Constants.PATIENT_RETRIEVED)
+            .withPatient(patient)
+            .build();
+
+        ResponseEntity<PatientResponseDTO> responseEntity = ResponseEntity.status(HttpStatus.OK).body(patientResponseDTO);
+        when(patientServiceAPI.retrievePatient("1")).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .get("/api/v1/patient/{id}", 1)  // Replace 1 with the desired patient ID
+            )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        PatientResponseDTO response = objectMapper.readValue(content, PatientResponseDTO.class);
+
+        assertEquals(Constants.PATIENT_RETRIEVED, response.getMessage());
+        assertEquals(200, response.getStatus());
+
+    }
+
+    @Test
+    public void shoudlGive404WhenPatientNotFound() throws Exception{
+        PatientResponseDTO patientResponseDTO = PatientResponseDTO.builder()
+            .withStatus(404)
+            .withMessage(Constants.PATIENT_NOT_FOUND)
+            .build();
+
+        ResponseEntity<PatientResponseDTO> responseEntity = ResponseEntity.status(HttpStatus.NOT_FOUND).body(patientResponseDTO);
+        when(patientServiceAPI.retrievePatient("99")).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .get("/api/v1/patient/{id}", 99)  // Replace 1 with the desired patient ID
+            )
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        PatientResponseDTO response = objectMapper.readValue(content, PatientResponseDTO.class);
+
+        assertEquals(Constants.PATIENT_NOT_FOUND, response.getMessage());
+        assertEquals(404, response.getStatus());
     }
 }
