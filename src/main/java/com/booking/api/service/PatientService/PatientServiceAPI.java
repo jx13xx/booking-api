@@ -9,4 +9,6 @@ public interface PatientServiceAPI {
     ResponseEntity<PatientResponseDTO> createPatient(PatientDTO patientDTO);
 
     ResponseEntity<PatientResponseDTO> retrievePatient(String id);
+
+    ResponseEntity<PatientResponseDTO> deletePatient(String id);
 }
