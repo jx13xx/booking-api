@@ -1,5 +1,6 @@
 package com.booking.api.service.PatientService;
 
+import com.booking.api.constants.Constants;
 import com.booking.api.dto.PatientDTO;
 import com.booking.api.dto.PatientResponseDTO;
 import com.booking.api.model.Patient;
@@ -52,6 +53,21 @@ public class PatientServiceImpl implements PatientServiceAPI {
 
     }
 
+    @Override
+    public ResponseEntity<PatientResponseDTO> deletePatient(String id) {
+        try{
+            Long patiendId = Long.parseLong(id);
+            Optional<Patient> patient = patientRepository.findById(patiendId);
+            return patient.map(p -> {
+                   patientRepository.deleteById(patiendId);
+                   return ResponseEntity.ok().body(buildResponseDTO(DELETED));
+                } )
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildResponseDTO(PATIENT_NOT_FOUND)));
+        } catch (NumberFormatException ex){
+            return ResponseEntity.badRequest().body(buildResponseDTO("Invalid patient ID format"));
+        }
+    }
+
     private Optional<Patient> getPatient(PatientDTO patientDTO) {
         Optional<Patient> existingPatient = patientRepository.findByPatientNameAndPatientPhone(
             patientDTO.getName(),
@@ -82,6 +98,9 @@ public class PatientServiceImpl implements PatientServiceAPI {
         }
         if(message.equals(PATIENT_NOT_FOUND)){
             return PatientResponseDTO.builder().withMessage(message).withStatus(404).build();
+        }
+        if(message.equals(DELETED)){
+            return PatientResponseDTO.builder().withMessage(message).withStatus(200).build();
         }
         return PatientResponseDTO.builder().withMessage(message).build();
     }

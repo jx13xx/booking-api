@@ -23,7 +23,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -105,6 +105,40 @@ public class PatientServiceImplTest {
 
         when(patientRepository.findById(Long.valueOf(testNotPatientID))).thenReturn(Optional.empty());
         PatientResponseDTO response = patientService.retrievePatient(testNotPatientID).getBody();
+
+        assertEquals(404, response.getStatus());
+        assertEquals(Constants.PATIENT_NOT_FOUND, response.getMessage());
+    }
+
+    @Test
+    public void test_deletePatientSuccess() {
+        String testPatientID = "14";
+        Patient patient = new Patient();
+        patient.setPatientID(Long.valueOf(testPatientID));
+        patient.setPatientGender(Gender.MALE);
+        patient.setPatientEmail("testmail@mail.com");
+        patient.setPatientPhone("9715292038");
+        patient.setPatientName("test name");
+
+        when(patientRepository.findById(patient.getPatientID())).thenReturn(Optional.of(patient));
+        doNothing().when(patientRepository).deleteById(patient.getPatientID());
+
+        PatientResponseDTO response = patientService.deletePatient(testPatientID).getBody();
+
+        assertEquals(200, response.getStatus());
+        assertEquals(Constants.DELETED, response.getMessage());
+
+        // Verify that deleteById was called with the correct patient ID
+        verify(patientRepository).deleteById(patient.getPatientID());
+
+    }
+
+    @Test
+    public void test_deletePatientNotSuccess(){
+        String testNotPatientID = "99";
+
+        when(patientRepository.findById(Long.valueOf(testNotPatientID))).thenReturn(Optional.empty());
+        PatientResponseDTO response = patientService.deletePatient(testNotPatientID).getBody();
 
         assertEquals(404, response.getStatus());
         assertEquals(Constants.PATIENT_NOT_FOUND, response.getMessage());

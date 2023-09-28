@@ -73,6 +73,33 @@ public class PatientController {
         return ResponseEntity.status(httpStatus).body(patientResponseDTO);
     }
 
+    @DeleteMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> deletePatient(@PathVariable String id){
+        HttpStatus httpStatus = HttpStatus.OK;
+        PatientResponseDTO patientResponseDTO  = null;
+
+        try{
+            ResponseEntity<PatientResponseDTO> clientResponse = patientServiceAPI.deletePatient(id);
+            if (clientResponse.getStatusCode().is2xxSuccessful()) {
+                patientResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+
+            } else if (clientResponse.getStatusCode().is4xxClientError()) {
+                patientResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+
+            } else {
+                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+
+        }catch (PatientException ex){
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            throw  ex;
+        }
+
+        return  ResponseEntity.status(httpStatus).body(patientResponseDTO);
+    }
+
 
 
 
