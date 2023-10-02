@@ -11,4 +11,6 @@ public interface PatientServiceAPI {
     ResponseEntity<PatientResponseDTO> retrievePatient(String id);
 
     ResponseEntity<PatientResponseDTO> deletePatient(String id);
+
+    ResponseEntity<PatientResponseDTO> updatePatient(PatientDTO patientDTO,String id);
 }

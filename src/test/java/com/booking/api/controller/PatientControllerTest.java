@@ -250,4 +250,91 @@ public class PatientControllerTest {
         assertEquals(Constants.PATIENT_NOT_FOUND, response.getMessage());
         assertEquals(404, response.getStatus());
     }
+
+    @Test
+    public void shouldGive200ResponseOnUpdatePatient() throws Exception {
+        Long patientId = 2L;
+        PatientDTO patientDTO = new PatientDTO();
+        patientDTO.setName("name");
+        patientDTO.setPhone("971527459148");
+        patientDTO.setEmail("test@mail.com");
+        patientDTO.setGender("MALE");
+        patientDTO.setDateOfBirth(LocalDate.now());
+        patientDTO.setMedicalHistory("NULL");
+
+        Patient patient = new Patient();
+        patient.setPatientID(patientId);
+        patient.setPatientName(patientDTO.getName());
+        patient.setPatientEmail(patientDTO.getEmail());
+        patient.setPatientPhone(patientDTO.getPhone());
+        patient.setPatientGender(Gender.valueOf(patientDTO.getGender()));
+        patient.setPatientDateOfBirth(patientDTO.getDateOfBirth());
+        patient.setPatientMedicalHistory(patientDTO.getMedicalHistory());
+
+        String requestJSON = objectMapper.writeValueAsString(patientDTO);
+
+        // Create a sample response for the service method
+        PatientResponseDTO patientResponseDTO = PatientResponseDTO.builder()
+            .withId(patientId.toString())
+            .withStatus(200)
+            .withMessage(Constants.PATIENT_RETRIEVED)
+            .withPatient(patient)
+            .build();
+
+        ResponseEntity<PatientResponseDTO> responseEntity = ResponseEntity.status(HttpStatus.OK).body(patientResponseDTO);
+        when(patientServiceAPI.updatePatient(patientDTO, patientId.toString())).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .put("/api/v1/patient/2")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJSON) // JSON representation of the patientDTO
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().is2xxSuccessful())
+            .andReturn();
+
+        // Validate the response
+        String content = result.getResponse().getContentAsString();
+        PatientResponseDTO response = objectMapper.readValue(content, PatientResponseDTO.class);
+
+        assertEquals(Constants.PATIENT_RETRIEVED, response.getMessage());
+        assertEquals(200, response.getStatus());
+        assertEquals(patientDTO.getPhone(), response.getPatient().get("phone"));
+        assertEquals(patientDTO.getName(), response.getPatient().get("name"));
+        assertEquals(patientDTO.getEmail(), response.getPatient().get("email"));
+    }
+
+    @Test
+    public void shoudlGive404UpdateWhenPatientNotFound() throws Exception{
+        PatientDTO patientDTO = new PatientDTO();
+        patientDTO.setName("name");
+        patientDTO.setPhone("971527459148");
+        patientDTO.setEmail("test@mail.com");
+        patientDTO.setGender("MALE");
+        patientDTO.setDateOfBirth(LocalDate.now());
+        patientDTO.setMedicalHistory("NULL");
+
+        PatientResponseDTO patientResponseDTO = PatientResponseDTO.builder()
+            .withStatus(404)
+            .withMessage(Constants.PATIENT_NOT_FOUND)
+            .build();
+
+        String requestJSON = objectMapper.writeValueAsString(patientDTO);
+
+        ResponseEntity<PatientResponseDTO> responseEntity = ResponseEntity.status(HttpStatus.NOT_FOUND).body(patientResponseDTO);
+        when(patientServiceAPI.updatePatient(patientDTO, "99")).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .put("/api/v1/patient/{id}", 99)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJSON) // JSON representation of the patientDTO
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(status().isNotFound())
+            .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        PatientResponseDTO response = objectMapper.readValue(content, PatientResponseDTO.class);
+
+        assertEquals(Constants.PATIENT_NOT_FOUND, response.getMessage());
+        assertEquals(404, response.getStatus());
+    }
 }

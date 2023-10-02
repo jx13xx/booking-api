@@ -3,6 +3,7 @@ package com.booking.api.service.PatientService;
 import com.booking.api.constants.Constants;
 import com.booking.api.dto.PatientDTO;
 import com.booking.api.dto.PatientResponseDTO;
+import com.booking.api.model.Gender;
 import com.booking.api.model.Patient;
 import com.booking.api.repository.PatientRepository;
 import org.modelmapper.ModelMapper;
@@ -68,6 +69,37 @@ public class PatientServiceImpl implements PatientServiceAPI {
         }
     }
 
+    @Override
+    public ResponseEntity<PatientResponseDTO> updatePatient(PatientDTO patientDTO,String id) {
+       try {
+
+           Long patientiD = Long.parseLong(id);
+           Optional<Patient> patient = patientRepository.findById(patientiD);
+
+           return patient.map(p -> {
+               patientRepository.save(extracted(patientDTO, p));
+               return ResponseEntity.ok().body(buildResponseDTO(p, PATIENT_RETRIEVED));
+
+           }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildResponseDTO(PATIENT_NOT_FOUND)));
+
+       }catch (NumberFormatException ex){
+           return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(buildResponseDTO("Invalid patient ID format"));
+       }
+    }
+
+    private Patient extracted (PatientDTO patientDTO, Patient existingPatient) {
+        existingPatient.setPatientGender(Gender.valueOf(patientDTO.getGender()));
+        existingPatient.setPatientEmail(patientDTO.getEmail());
+        existingPatient.setPatientName(patientDTO.getName());
+        existingPatient.setPatientEmail(patientDTO.getEmail());
+        existingPatient.setPatientPhone(patientDTO.getPhone());
+        existingPatient.setPatientDateOfBirth(patientDTO.getDateOfBirth());
+        existingPatient.setPatientMedicalHistory(patientDTO.getMedicalHistory());
+
+        return existingPatient;
+
+    }
+
     private Optional<Patient> getPatient(PatientDTO patientDTO) {
         Optional<Patient> existingPatient = patientRepository.findByPatientNameAndPatientPhone(
             patientDTO.getName(),
@@ -85,7 +117,11 @@ public class PatientServiceImpl implements PatientServiceAPI {
     }
 
     private PatientResponseDTO buildResponseDTO(Patient patient, String message) {
-        return PatientResponseDTO.builder().withMessage(message).withId(patient.getPatientID().toString()).build();
+        if(message.equals(PATIENT_RETRIEVED)){
+            return PatientResponseDTO.builder().withMessage(message).withPatient(patient).build();
+        }else {
+            return PatientResponseDTO.builder().withMessage(message).withId(patient.getPatientID().toString()).build();
+        }
     }
 
     private PatientResponseDTO buildResponseDTO(Patient patient) {
