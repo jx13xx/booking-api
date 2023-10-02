@@ -100,6 +100,35 @@ public class PatientController {
         return  ResponseEntity.status(httpStatus).body(patientResponseDTO);
     }
 
+    @PutMapping(value = "{id}",consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ValidationErrorHandler
+    public ResponseEntity<?> updatePatient(@Valid @RequestBody PatientDTO patientDTO, @PathVariable String id){
+        HttpStatus httpStatus = HttpStatus.OK;
+        PatientResponseDTO patientResponseDTO = null;
+
+        try{
+            ResponseEntity<PatientResponseDTO> clientResponse = patientServiceAPI.updatePatient(patientDTO, id);
+            if (clientResponse.getStatusCode().is2xxSuccessful()) {
+                patientResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+
+            } else if (clientResponse.getStatusCode().is4xxClientError()) {
+                patientResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+
+            } else {
+                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+
+        }catch (PatientException ex){
+           httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+           throw ex;
+        }
+
+        return ResponseEntity.status(httpStatus).body(patientResponseDTO);
+
+    }
+
 
 
 

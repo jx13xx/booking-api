@@ -143,4 +143,50 @@ public class PatientServiceImplTest {
         assertEquals(404, response.getStatus());
         assertEquals(Constants.PATIENT_NOT_FOUND, response.getMessage());
     }
+
+    @Test
+    public void testUpdatePatientSuccess() {
+        Long patientId = 1L;
+        PatientDTO patientDTO = new PatientDTO();
+        patientDTO.setName("testname");
+        patientDTO.setGender(String.valueOf(Gender.valueOf("MALE")));
+        patientDTO.setEmail("test@mail.com");
+        patientDTO.setPhone("971527206148");
+        patientDTO.setMedicalHistory("NU");
+
+        Patient existingPatient = new Patient();
+        existingPatient.setPatientID(patientId);
+        existingPatient.setPatientName("testname");
+        existingPatient.setPatientGender(Gender.valueOf("MALE"));
+        existingPatient.setPatientEmail("test@mail.com");
+        existingPatient.setPatientPhone("971527206148");
+        existingPatient.setPatientMedicalHistory("Updated details");
+
+        when(patientRepository.findById(patientId)).thenReturn(Optional.of(existingPatient));
+
+        // Act
+        PatientResponseDTO response = patientService.updatePatient(patientDTO, patientId.toString()).getBody();
+
+        // Assert
+        verify(patientRepository, times(1)).findById(patientId);
+        verify(patientRepository, times(1)).save(any(Patient.class));
+
+        assertEquals(Constants.PATIENT_RETRIEVED, response.getMessage());
+    }
+
+    @Test
+    public void test_updatePatientNotSucess(){
+        String testNotPatientID = "99";
+        PatientDTO patientDTO = new PatientDTO();
+        patientDTO.setName("testname");
+        patientDTO.setGender(String.valueOf(Gender.valueOf("MALE")));
+        patientDTO.setEmail("test@mail.com");
+        patientDTO.setPhone("971527206148");
+
+        when(patientRepository.findById(Long.valueOf(testNotPatientID))).thenReturn(Optional.empty());
+        PatientResponseDTO response = patientService.updatePatient(patientDTO,testNotPatientID).getBody();
+
+        assertEquals(404, response.getStatus());
+        assertEquals(Constants.PATIENT_NOT_FOUND, response.getMessage());
+    }
 }
