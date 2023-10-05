@@ -3,6 +3,8 @@ package com.booking.api.service.PatientService;
 import com.booking.api.constants.Constants;
 import com.booking.api.dto.PatientDTO;
 import com.booking.api.dto.PatientResponseDTO;
+import com.booking.api.dto.ProviderResponseDTO;
+import com.booking.api.dto.ResponseDTO;
 import com.booking.api.model.Gender;
 import com.booking.api.model.Patient;
 import com.booking.api.repository.PatientRepository;
