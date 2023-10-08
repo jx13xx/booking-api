@@ -8,6 +8,7 @@ import com.booking.api.model.Provider;
 import com.booking.api.model.WorkingHours;
 import com.booking.api.repository.ProviderRepository;
 import com.booking.api.service.ProviderService.ProviderServiceImpl;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -201,6 +202,18 @@ public class ProviderServiceImplTest {
     }
     @Test
     public void test_retrieveProviderNotSuccess() {
+        String testNotProviderID = "99";
+
+        when(providerRepository.findById(Long.valueOf(testNotProviderID))).thenReturn(Optional.empty());
+        ProviderResponseDTO response = providerService.retrieveProvider(testNotProviderID).getBody();
+
+        assertEquals(404, response.getStatus());
+        assertEquals(Constants.PROVIDER_NOT_FOUND, response.getMessage());
+    }
+
+    @Test
+    @Ignore
+    public void test_retrieveProviderNotSuccess2() {
         String testNotProviderID = "99";
 
         when(providerRepository.findById(Long.valueOf(testNotProviderID))).thenReturn(Optional.empty());
