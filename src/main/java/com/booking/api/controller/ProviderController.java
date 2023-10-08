@@ -8,10 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -44,5 +41,31 @@ public class ProviderController {
             throw ex;
         }
         return ResponseEntity.status(httpStatus).body(providerResponseDTO);
+    }
+
+
+    @DeleteMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> deleteProvider(@PathVariable String id){
+        HttpStatus httpStatus = HttpStatus.OK;
+        ProviderResponseDTO providerResponseDTO = null;
+
+        try {
+            ResponseEntity<ProviderResponseDTO> clientResponse = providerServiceAPI.deleteProvider(id);
+            if (clientResponse.getStatusCode().is2xxSuccessful()) {
+                providerResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+            } else if (clientResponse.getStatusCode().is4xxClientError()) {
+                providerResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+            } else {
+                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+        }
+        catch (Exception ex){
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            throw ex;
+        }
+            return ResponseEntity.status(httpStatus).body(providerResponseDTO);
+
     }
 }

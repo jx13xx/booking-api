@@ -3,6 +3,7 @@ package com.booking.api.controller;
 import com.booking.api.constants.Constants;
 import com.booking.api.dto.ProviderDTO;
 import com.booking.api.dto.ProviderResponseDTO;
+import com.booking.api.model.Provider;
 import com.booking.api.model.WorkingHours;
 import com.booking.api.service.ProviderService.ProviderServiceAPI;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -148,5 +149,58 @@ public class ProviderControllerTest {
         assertEquals(403, responseDTO.getStatus());
         assertEquals(Constants.PATIENT_ALREADY_EXITS, responseDTO.getMessage());
 
+    }
+
+    @Test
+    public void shouldGive404WhenProviderNotFound() throws Exception {
+        ProviderResponseDTO providerResponseDTO = ProviderResponseDTO.builder().withId("2")
+            .withStatus(404)
+            .withMessage(Constants.PROVIDER_NOT_FOUND).build();
+
+        ResponseEntity<ProviderResponseDTO> responseEntity = ResponseEntity.status(404).body(providerResponseDTO);
+        when(providerServiceAPI.deleteProvider("2")).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .delete("/api/v1/provider/2")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().is4xxClientError())
+            .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        ProviderResponseDTO response = objectMapper.readValue(content, ProviderResponseDTO.class);
+
+        assertEquals(Constants.PROVIDER_NOT_FOUND, response.getMessage());
+        assertEquals(404, response.getStatus());
+    }
+
+    @Test
+    public void shouldGive2002AfterProviderDeletedSuccessfully() throws Exception {
+        Provider provider = new Provider();
+        provider.setProviderID(2L);
+        provider.setProviderName("Test Provider");
+        provider.setProviderEmail("test@mail.com");
+        provider.setProviderPhone("971123456789");
+        provider.setConsulationDuration(3);
+
+        ProviderResponseDTO providerResponseDTO = ProviderResponseDTO.builder().withId("2")
+            .withStatus(200)
+            .withMessage(Constants.DELETED).build();
+
+        ResponseEntity<ProviderResponseDTO> responseEntity = ResponseEntity.status(200).body(providerResponseDTO);
+        when(providerServiceAPI.deleteProvider("2")).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .delete("/api/v1/provider/{id}", 2)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().is2xxSuccessful())
+            .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        ProviderResponseDTO response = objectMapper.readValue(content, ProviderResponseDTO.class);
+
+        assertEquals(Constants.DELETED, response.getMessage());
+        assertEquals(200, response.getStatus());
     }
 }

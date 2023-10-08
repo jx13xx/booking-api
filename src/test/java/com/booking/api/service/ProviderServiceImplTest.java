@@ -1,6 +1,7 @@
 package com.booking.api.service;
 
 //mockito configurations
+import com.booking.api.constants.Constants;
 import com.booking.api.dto.ProviderDTO;
 import com.booking.api.dto.ProviderResponseDTO;
 import com.booking.api.model.Provider;
@@ -127,6 +128,36 @@ public class ProviderServiceImplTest {
         ResponseEntity<ProviderResponseDTO> responseEntity = providerService.createProvider(providerDTO);
         assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
         assertNotNull(responseEntity.getBody());
+
+    }
+
+    @Test
+    public void test_DeleteProviderSuccess(){
+        String testProviderID = "14";
+        Provider provider = new Provider();
+        provider.setProviderID(Long.valueOf(testProviderID));
+
+        when(providerRepository.findById(provider.getProviderID())).thenReturn(Optional.of(provider));
+        doNothing().when(providerRepository).deleteById(provider.getProviderID());
+
+        ProviderResponseDTO providerResponse = providerService.deleteProvider(testProviderID).getBody();
+
+        assertEquals(Constants.DELETED, providerResponse.getMessage());
+        assertEquals(200, providerResponse.getStatus());
+
+        //Verify that deleteById was called with the correct providerID
+        verify(providerRepository, times(1)).deleteById(provider.getProviderID());
+    }
+
+    @Test
+    public void test_deleteProviderNotSuccess() {
+        String testNotProviderID = "99";
+
+        when(providerRepository.findById(Long.valueOf(testNotProviderID))).thenReturn(Optional.empty());
+        ProviderResponseDTO response = providerService.deleteProvider(testNotProviderID).getBody();
+
+        assertEquals(404, response.getStatus());
+        assertEquals(Constants.PROVIDER_NOT_FOUND, response.getMessage());
 
     }
 
