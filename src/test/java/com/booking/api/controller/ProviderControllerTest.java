@@ -22,8 +22,10 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.sql.Time;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -203,4 +205,75 @@ public class ProviderControllerTest {
         assertEquals(Constants.DELETED, response.getMessage());
         assertEquals(200, response.getStatus());
     }
+
+    @Test
+    public void shouldGive200ResponseIfProviderFound() throws Exception {
+        Provider provider = new Provider();
+        provider.setProviderID(2L);
+        provider.setProviderName("Test Provider");
+        provider.setProviderEmail("test@mail.com");
+        provider.setProviderPhone("971123456789");
+        provider.setConsulationDuration(3);
+
+        List<WorkingHours> workingHoursList = new ArrayList<>();
+        WorkingHours workingHours = new WorkingHours();
+        workingHours.setWorkingDate(LocalDate.now());
+        workingHours.setDayOfTheWeek("Wednesday");
+        workingHours.setStartTime(Time.valueOf("09:00:00"));
+        workingHours.setEndTime(Time.valueOf("17:00:00"));
+        workingHours.setBreakTime(Time.valueOf("12:00:00"));
+        workingHoursList.add(workingHours);
+        provider.setWorkingHours(workingHoursList);
+
+        ProviderResponseDTO providerResponseDTO = ProviderResponseDTO.builder().withId("2")
+            .withStatus(200)
+            .withMessage(Constants.PROVIDER_RETRIEVED)
+            .withProvider(provider)
+            .build();
+
+       when(providerServiceAPI.retrieveProvider("2")).thenReturn(ResponseEntity.status(200).body(providerResponseDTO));
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .get("/api/v1/provider/{id}", 2)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().is2xxSuccessful())
+            .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        ProviderResponseDTO response = objectMapper.readValue(content, ProviderResponseDTO.class);
+
+        assertEquals(Constants.PROVIDER_RETRIEVED, response.getMessage());
+        assertEquals(200, response.getStatus());
+        assertEquals(provider.getProviderName(), response.getProvider().get("name"));
+        assertEquals(provider.getProviderEmail(), response.getProvider().get("email"));
+        assertEquals(provider.getProviderPhone(), response.getProvider().get("phone"));
+        assertNotNull(response.getProvider().get("workingHours"));
+    }
+
+    @Test
+    public void shouldGive404ProviderNotFound() throws Exception {
+        ProviderResponseDTO providerResponseDTO = ProviderResponseDTO.builder().withId("2")
+            .withStatus(404)
+            .withMessage(Constants.PROVIDER_NOT_FOUND).build();
+
+        ResponseEntity<ProviderResponseDTO> responseEntity = ResponseEntity.status(404).body(providerResponseDTO);
+        when(providerServiceAPI.retrieveProvider("2")).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .get("/api/v1/provider/{id}", 2)
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().is4xxClientError())
+            .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        ProviderResponseDTO responseDTO = objectMapper.readValue(content, ProviderResponseDTO.class);
+
+        assertEquals(Constants.PROVIDER_NOT_FOUND, responseDTO.getMessage());
+        assertEquals(404, responseDTO.getStatus());
+
+    }
+
+
 }

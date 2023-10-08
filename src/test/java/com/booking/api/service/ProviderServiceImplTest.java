@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.sql.Time;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -159,6 +160,54 @@ public class ProviderServiceImplTest {
         assertEquals(404, response.getStatus());
         assertEquals(Constants.PROVIDER_NOT_FOUND, response.getMessage());
 
+    }
+
+
+    @Test
+    public void test_retriveProviderSuccess() {
+        String testProviderID = "14";
+        Provider provider = new Provider();
+        provider.setProviderID(Long.valueOf(testProviderID));
+        provider.setProviderName("test name");
+        provider.setProviderEmail(generateRandomEmail());
+        provider.setProviderPhone(generateRandomMobile());
+        provider.setProviderName(generateRandomName());
+        provider.setProviderSpecialization("Test Specialization");
+        provider.setConsulationDuration(3);
+
+        List<WorkingHours> workingHoursList = new ArrayList<>();
+        WorkingHours workingHours = new WorkingHours();
+        workingHours.setWorkingDate(LocalDate.now());
+        workingHours.setDayOfTheWeek("Wednesday");
+        workingHours.setStartTime(Time.valueOf("09:00:00"));
+        workingHours.setEndTime(Time.valueOf("17:00:00"));
+        workingHours.setBreakTime(Time.valueOf("12:00:00"));
+        workingHoursList.add(workingHours);
+
+        provider.setWorkingHours(workingHoursList);
+
+        when(providerRepository.findById(provider.getProviderID())).thenReturn(Optional.of(provider));
+
+        ProviderResponseDTO response = providerService.retrieveProvider(testProviderID).getBody();
+
+        assertEquals(200, response.getStatus());
+        assertEquals(Constants.PATIENT_RETRIEVED, response.getMessage());
+        assertEquals(provider.getProviderName(), response.getProvider().get("name"));
+        assertEquals(provider.getProviderEmail(), response.getProvider().get("email"));
+        assertEquals(provider.getProviderPhone(), response.getProvider().get("phone"));
+        assertEquals(provider.getProviderSpecialization(), response.getProvider().get("specialization"));
+        assertEquals(provider.getConsulationDuration().toString(), response.getProvider().get("duration"));
+        assertNotNull(response.getProvider().get("workingHours"));
+    }
+    @Test
+    public void test_retrieveProviderNotSuccess() {
+        String testNotProviderID = "99";
+
+        when(providerRepository.findById(Long.valueOf(testNotProviderID))).thenReturn(Optional.empty());
+        ProviderResponseDTO response = providerService.retrieveProvider(testNotProviderID).getBody();
+
+        assertEquals(404, response.getStatus());
+        assertEquals(Constants.PROVIDER_NOT_FOUND, response.getMessage());
     }
 
 }
