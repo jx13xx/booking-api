@@ -12,8 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
-import static com.booking.api.constants.Constants.PROVIDER_ALREADY_EXITS;
-import static com.booking.api.constants.Constants.PROVIDER_NOT_FOUND;
+import static com.booking.api.constants.Constants.*;
 
 @Service
 public class ProviderServiceImpl implements ProviderServiceAPI{
@@ -38,7 +37,7 @@ public class ProviderServiceImpl implements ProviderServiceAPI{
             return ResponseEntity.status(HttpStatus.CONFLICT).body(buildResponseDTO(PROVIDER_ALREADY_EXITS));
         }
         Provider savedProvider = saveProvider(provider);
-        return ResponseEntity.status(HttpStatus.CREATED).body(buildResponseDTO(savedProvider, PROVIDER_ALREADY_EXITS));
+        return ResponseEntity.status(HttpStatus.CREATED).body(buildResponseDTO(savedProvider, PROVIDER_CREATED_SUCCESSFULLY));
 
     }
 
@@ -53,7 +52,18 @@ public class ProviderServiceImpl implements ProviderServiceAPI{
 
     @Override
     public ResponseEntity<ProviderResponseDTO> deleteProvider(String id) {
-        return null;
+        try {
+            Long providerId = Long.parseLong(id);
+            Optional<Provider> provider = providerRepository.findById(providerId);
+            return provider.map(p -> {
+                    providerRepository.deleteById(providerId);
+                    return ResponseEntity.ok().body(buildResponseDTO(DELETED));
+                } )
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildResponseDTO(PROVIDER_NOT_FOUND)));
+
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(buildResponseDTO("Invalid provider ID format"));
+        }
     }
 
     @Override
