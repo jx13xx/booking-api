@@ -2,6 +2,7 @@ package com.booking.api.controller;
 
 import com.booking.api.dto.ProviderDTO;
 import com.booking.api.dto.ProviderResponseDTO;
+import com.booking.api.exceptions.ProviderException.ProviderException;
 import com.booking.api.exceptions.validation.ValidationErrorHandler;
 import com.booking.api.service.ProviderService.ProviderServiceAPI;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,7 +44,29 @@ public class ProviderController {
         return ResponseEntity.status(httpStatus).body(providerResponseDTO);
     }
 
+    @GetMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+   public ResponseEntity<?> retrieveProvider(@PathVariable String id){
+        HttpStatus httpStatus = HttpStatus.OK;
+        ProviderResponseDTO providerResponseDTO = null;
 
+        try {
+            ResponseEntity<ProviderResponseDTO> clientResponse = providerServiceAPI.retrieveProvider(id);
+            if (clientResponse.getStatusCode().is2xxSuccessful()) {
+                providerResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+            } else if (clientResponse.getStatusCode().is4xxClientError()) {
+                providerResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+            } else {
+                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+
+        }catch (ProviderException ex){
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            throw ex;
+        }
+        return ResponseEntity.status(httpStatus).body(providerResponseDTO);
+   }
     @DeleteMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> deleteProvider(@PathVariable String id){
         HttpStatus httpStatus = HttpStatus.OK;

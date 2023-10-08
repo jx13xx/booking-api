@@ -4,7 +4,7 @@ import com.booking.api.model.Provider;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
-import java.util.HashMap;
+import java.util.*;
 
 @Data
 public class ProviderResponseDTO {
@@ -16,7 +16,7 @@ public class ProviderResponseDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private Integer status;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private HashMap<String, String> provider;
+    private HashMap<Object, Object> provider;
 
     private ProviderResponseDTO() {}
 
@@ -28,7 +28,7 @@ public class ProviderResponseDTO {
         return message;
     }
 
-    public HashMap<String, String> getProvider(){
+    public HashMap<Object, Object> getProvider(){
         return provider;
     }
 
@@ -55,12 +55,30 @@ public class ProviderResponseDTO {
         }
 
         public Builder withProvider(Provider provider){
-            HashMap<String, String> response = new HashMap<>();
-            response.put("id", provider.getProviderID().toString());
+            HashMap<Object, Object > response = new HashMap<>();
+            response.put("providerId", provider.getProviderID().toString());
             response.put("name", provider.getProviderName());
             response.put("email", provider.getProviderEmail());
             response.put("phone", provider.getProviderPhone());
             response.put("specialization", provider.getProviderSpecialization());
+            response.put("duration", provider.getConsulationDuration().toString());
+
+            Optional.ofNullable(provider.getWorkingHours()).ifPresent(workingHours -> {
+                List<Map<String, String>> workingHoursList = new ArrayList<>();
+
+                workingHours.forEach(workingHour -> {
+                    HashMap<String, String> workingHourMap = new HashMap<>();
+                    workingHourMap.put("workingDate", workingHour.getWorkingDate().toString());
+                    workingHourMap.put("dayOfTheWeek", workingHour.getDayOfTheWeek());
+                    workingHourMap.put("startTime", workingHour.getStartTime().toString());
+                    workingHourMap.put("endTime", workingHour.getEndTime().toString());
+                    workingHourMap.put("breakTime", workingHour.getBreakTime().toString());
+
+                    workingHoursList.add(workingHourMap);
+                });
+
+                response.put("workingHours", workingHoursList);
+            });
 
             responseDTO.provider = response;
             return this;

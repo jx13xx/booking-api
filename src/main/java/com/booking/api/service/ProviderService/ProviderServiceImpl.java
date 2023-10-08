@@ -1,5 +1,6 @@
 package com.booking.api.service.ProviderService;
 
+import com.booking.api.constants.Constants;
 import com.booking.api.dto.ProviderDTO;
 import com.booking.api.dto.ProviderResponseDTO;
 import com.booking.api.model.Provider;
@@ -47,7 +48,14 @@ public class ProviderServiceImpl implements ProviderServiceAPI{
 
     @Override
     public ResponseEntity<ProviderResponseDTO> retrieveProvider(String id) {
-        return null;
+        try {
+            Long providerId = Long.parseLong(id);
+            Optional<Provider> provider = providerRepository.findById(providerId);
+            return provider.map(p -> ResponseEntity.ok(buildResponseDTO(p, PROVIDER_RETRIEVED)))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildResponseDTO(PROVIDER_NOT_FOUND)));
+        } catch (NumberFormatException e) {
+            return ResponseEntity.badRequest().body(buildResponseDTO("Invalid provider ID format"));
+        }
     }
 
     @Override
@@ -90,18 +98,36 @@ public class ProviderServiceImpl implements ProviderServiceAPI{
     private ProviderResponseDTO buildResponseDTO(Provider provider) {
         return new ProviderResponseDTO.Builder()
                 .withId(provider.getProviderID().toString())
+                .withMessage(PATIENT_RETRIEVED)
                 .withProvider(provider)
                 .build();
     }
     private ProviderResponseDTO buildResponseDTO(Provider provider, String message) {
-        return new ProviderResponseDTO.Builder()
+        if(message.equals(PROVIDER_RETRIEVED)){
+            return new ProviderResponseDTO.Builder()
+                .withId(provider.getProviderID().toString())
+                .withMessage(message)
+                .withProvider(provider)
+                .withStatus(HttpStatus.OK.value())
+                .build();
+        } else {
+
+            return new ProviderResponseDTO.Builder()
                 .withId(provider.getProviderID().toString())
                 .withMessage(message)
                 .withStatus(HttpStatus.CREATED.value())
                 .build();
+
+        }
     }
 
     private ProviderResponseDTO buildResponseDTO(String message) {
+        if(message.equals(PROVIDER_RETRIEVED)){
+            return new ProviderResponseDTO.Builder()
+                .withMessage(message)
+                .withStatus(HttpStatus.OK.value())
+                .build();
+        }
         if (message.equals(PROVIDER_ALREADY_EXITS)) {
             return new ProviderResponseDTO.Builder()
                 .withMessage(message)
