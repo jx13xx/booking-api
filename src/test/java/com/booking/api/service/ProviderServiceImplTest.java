@@ -223,5 +223,61 @@ public class ProviderServiceImplTest {
         assertEquals(Constants.PROVIDER_NOT_FOUND, response.getMessage());
     }
 
+    @Test
+    public void testUpdateProviderSuccess() {
+        Long providerID = 14l;
+        ProviderDTO providerDTO = new ProviderDTO();
+        providerDTO.setName("test name");
+        providerDTO.setEmail(generateRandomEmail());
+        providerDTO.setPhone(generateRandomMobile());
+        providerDTO.setSpecialization("Test Specialization");
+        providerDTO.setDuration(3);
+
+        List<WorkingHours> workingHoursList = new ArrayList<>();
+        WorkingHours workingHours = new WorkingHours();
+        workingHours.setBreakTime(Time.valueOf("12:00:00"));
+        workingHours.setStartTime(Time.valueOf("09:00:00"));
+        workingHours.setWorkingDate(LocalDate.now());
+        workingHours.setEndTime(Time.valueOf("17:00:00"));
+        workingHours.setDayOfTheWeek("Wednesday");
+        workingHoursList.add(workingHours);
+        providerDTO.setWorkingHours(workingHoursList);
+
+        Provider existingProvider = new Provider();
+        existingProvider.setProviderID(providerID);
+        existingProvider.setProviderSpecialization("Test Specialization");
+        existingProvider.setProviderEmail(providerDTO.getEmail());
+        existingProvider.setProviderName(providerDTO.getName());
+        existingProvider.setProviderPhone(providerDTO.getPhone());
+        existingProvider.setConsulationDuration(providerDTO.getDuration());
+        existingProvider.setWorkingHours(workingHoursList);
+
+        when(providerRepository.findById(providerID)).thenReturn(Optional.of(existingProvider));
+
+        ProviderResponseDTO response = providerService.updateProvider(providerDTO, providerID.toString()).getBody();
+
+        //Assert
+        verify(providerRepository, times(1)).findById(providerID);
+        verify(providerRepository, times(1)).save(any(Provider.class));
+
+        assertEquals(Constants.PATIENT_RETRIEVED, response.getMessage());
+    }
+
+    @Test
+    public void test_updateProviderNotSuccess(){
+       String testNotProvideID = "99";
+       ProviderDTO providerDTO = new ProviderDTO();
+       providerDTO.setName("test name");
+       providerDTO.setEmail("test@mail.com");
+       providerDTO.setPhone("971527206148");
+       providerDTO.setSpecialization("Test Specialization");
+
+         when(providerRepository.findById(Long.valueOf(testNotProvideID))).thenReturn(Optional.empty());
+         ProviderResponseDTO response = providerService.updateProvider(providerDTO,testNotProvideID).getBody();
+
+         assertEquals(404, response.getStatus());
+         assertEquals(Constants.PROVIDER_NOT_FOUND, response.getMessage());
+    }
+
 }
 

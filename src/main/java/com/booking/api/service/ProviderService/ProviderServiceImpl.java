@@ -76,7 +76,29 @@ public class ProviderServiceImpl implements ProviderServiceAPI{
 
     @Override
     public ResponseEntity<ProviderResponseDTO> updateProvider(ProviderDTO providerDTO, String id) {
-        return null;
+        try{
+            Long providerID = Long.parseLong(id);
+            Optional<Provider> provider = providerRepository.findById(providerID);
+
+            return provider.map(p -> {
+                providerRepository.save(extracted(providerDTO, p));
+                return ResponseEntity.ok().body(buildResponseDTO(p, PROVIDER_RETRIEVED));
+            }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildResponseDTO(PROVIDER_NOT_FOUND)));
+
+        } catch (NumberFormatException ex){
+            return ResponseEntity.badRequest().body(buildResponseDTO("Invalid provider ID format"));
+        }
+
+    }
+
+    private Provider extracted (ProviderDTO providerDTO, Provider existingProvider) {
+          existingProvider.setProviderEmail(providerDTO.getEmail());
+          existingProvider.setProviderName(providerDTO.getName());
+          existingProvider.setProviderSpecialization(providerDTO.getSpecialization());
+          existingProvider.setProviderPhone(providerDTO.getPhone());
+          existingProvider.setConsulationDuration(providerDTO.getDuration());
+          Optional.ofNullable(providerDTO.getWorkingHours()).ifPresent(existingProvider::setWorkingHours);
+        return existingProvider;
     }
 
     private Provider mapProviderDTOToEntity(ProviderDTO providerDTO) {

@@ -275,5 +275,94 @@ public class ProviderControllerTest {
 
     }
 
+    // write controller to test update provider
+    @Test
+    public void shouldGive200ResponseIfProviderUpdatedSuccessfully() throws Exception {
+        Long providerID = 14l;
+        ProviderDTO providerDTO = new ProviderDTO();
+        providerDTO.setName("test name");
+        providerDTO.setEmail("mail@test.com");
+        providerDTO.setPhone("971527219149");
+        providerDTO.setSpecialization("Test Specialization");
+        providerDTO.setDuration(3);
 
+        List<WorkingHours> workingHoursList = new ArrayList<>();
+        WorkingHours workingHours = new WorkingHours();
+        workingHours.setBreakTime(Time.valueOf("12:00:00"));
+        workingHours.setStartTime(Time.valueOf("09:00:00"));
+        workingHours.setWorkingDate(LocalDate.now());
+        workingHours.setEndTime(Time.valueOf("17:00:00"));
+        workingHours.setDayOfTheWeek("Wednesday");
+        workingHoursList.add(workingHours);
+        providerDTO.setWorkingHours(workingHoursList);
+
+        Provider existingProvider = new Provider();
+        existingProvider.setProviderID(providerID);
+        existingProvider.setProviderSpecialization("Test Specialization");
+        existingProvider.setProviderEmail(providerDTO.getEmail());
+        existingProvider.setProviderName(providerDTO.getName());
+        existingProvider.setProviderPhone(providerDTO.getPhone());
+        existingProvider.setConsulationDuration(providerDTO.getDuration());
+        existingProvider.setWorkingHours(workingHoursList);
+
+        String requestJSON = objectMapper.writeValueAsString(providerDTO);
+
+        ProviderResponseDTO providerResponseDTO = ProviderResponseDTO.builder().withId("2")
+            .withStatus(200)
+            .withId(providerID.toString())
+            .withMessage(Constants.PATIENT_RETRIEVED)
+            .withProvider(existingProvider)
+            .build();
+
+        ResponseEntity<ProviderResponseDTO> responseEntity = ResponseEntity.status(200).body(providerResponseDTO);
+        when(providerServiceAPI.updateProvider(providerDTO, providerID.toString())).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .put("/api/v1/provider/{id}", providerID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJSON)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().is2xxSuccessful())
+            .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        ProviderResponseDTO responseDTO = objectMapper.readValue(content, ProviderResponseDTO.class);
+
+        assertEquals(Constants.PATIENT_RETRIEVED, responseDTO.getMessage());
+
+    }
+
+    @Test
+    public void shouldGive404UpdateWhenProviderNotFound() throws Exception {
+        Long providerID = 14l;
+        ProviderDTO providerDTO = new ProviderDTO();
+        providerDTO.setName("test name");
+        providerDTO.setEmail("test@mail.com");
+        providerDTO.setPhone("971527219149");
+        providerDTO.setSpecialization("Test Specialization");
+
+        ProviderResponseDTO providerResponseDTO = ProviderResponseDTO.builder()
+            .withStatus(404)
+            .withMessage(Constants.PROVIDER_NOT_FOUND)
+            .build();
+
+        String requestJSON = objectMapper.writeValueAsString(providerDTO);
+
+        ResponseEntity<ProviderResponseDTO> responseEntity = ResponseEntity.status(404).body(providerResponseDTO);
+        when(providerServiceAPI.updateProvider(providerDTO, "99")).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders
+                .put("/api/v1/provider/{id}", 99)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJSON)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().is4xxClientError())
+            .andReturn();
+
+        String content = result.getResponse().getContentAsString();
+        ProviderResponseDTO response = objectMapper.readValue(content, ProviderResponseDTO.class);
+
+        assertEquals(Constants.PROVIDER_NOT_FOUND, response.getMessage());
+        assertEquals(404, response.getStatus());
+    }
 }
