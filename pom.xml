@@ -86,6 +86,7 @@
 				</configuration>
 			</plugin>
 		</plugins>
+        <testSourceDirectory>${project.basedir}/src/test/java</testSourceDirectory>
 	</build>
 
 </project>
