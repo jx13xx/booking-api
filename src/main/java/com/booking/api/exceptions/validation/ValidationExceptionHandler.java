@@ -1,5 +1,7 @@
 package com.booking.api.exceptions.validation;
 
+import com.booking.api.exceptions.NotFoundException.NotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
@@ -22,5 +24,13 @@ public class ValidationExceptionHandler {
         }
 
         return ResponseEntity.badRequest().body(errors);
+    }
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<Map<String,Object>> handleNotFoundException(NotFoundException ex){
+        Map<String,Object> errors = new HashMap<>();
+        errors.put("message",ex.getMessage());
+        errors.put("status",HttpStatus.NOT_FOUND.value());
+
+        return new ResponseEntity<>(errors,HttpStatus.NOT_FOUND);
     }
 }
