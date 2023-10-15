@@ -11,7 +11,10 @@ public final class Constants {
     public static final String PROVIDER_NOT_FOUND = "No Provider Found";
     public static final String PROVIDER_CREATED_SUCCESSFULLY = "Provider created successfully";
 
-
+    public static final String BOOKING_NOT_AVAILABLE_FOR_PARTICULAR_DATE = "Booking not available for particular date";
+    public static  final String BOOKING_NOT_AVAILABLE_FOR_PARTICULAR_TIME = "Booking not available for particular time";
+    public static final String BOOKING_NOT_AVAILABLE  = "Booking not available";
+    public static final String BOOKING_SAVE_SUCCESSFULLY = "Booking saved successfully";
     private Constants() {
     }
 }

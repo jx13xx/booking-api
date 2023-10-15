@@ -28,6 +28,9 @@ public class Provider {
     @CollectionTable(name = "working_hours", joinColumns = @JoinColumn(name = "provider_id"))
     private List<WorkingHours> workingHours;
 
+    @OneToMany(mappedBy = "provider", cascade = CascadeType.ALL)
+    private List<Booking> bookings;
+
     private Integer consulationDuration;
 
 }

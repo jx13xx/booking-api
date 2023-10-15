@@ -73,6 +73,7 @@ public class ProviderResponseDTO {
                     workingHourMap.put("startTime", workingHour.getStartTime().toString());
                     workingHourMap.put("endTime", workingHour.getEndTime().toString());
                     workingHourMap.put("breakTime", workingHour.getBreakTime().toString());
+                    workingHourMap.put("isSlotAvailable", String.valueOf(workingHour.isAvailable()));
 
                     workingHoursList.add(workingHourMap);
                 });

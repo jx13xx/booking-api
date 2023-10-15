@@ -1,6 +1,6 @@
 package com.booking.api.model;
 
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.sql.Time;
@@ -15,4 +15,7 @@ public class WorkingHours {
     private Time startTime;
     private Time endTime;
     private Time breakTime;
+
+    private Integer maxSlots = 10;
+    private boolean isAvailable = true;
 }
