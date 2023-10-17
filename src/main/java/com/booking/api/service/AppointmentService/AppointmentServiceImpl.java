@@ -4,6 +4,7 @@ import com.booking.api.constants.Constants;
 import com.booking.api.dto.AppointmentDTO;
 import com.booking.api.dto.AppointmentResponseDTO;
 import com.booking.api.model.*;
+import com.booking.api.repository.BookingRepository;
 import com.booking.api.repository.PatientRepository;
 import com.booking.api.repository.ProviderRepository;
 import com.booking.api.validations.BookingValidationParams.ValidateBookingParams;
@@ -25,6 +26,9 @@ public class AppointmentServiceImpl implements AppointmentServiceAPI {
 
     @Autowired
     private PatientRepository patientRepository;
+
+    @Autowired
+    private BookingRepository bookingRepository;
 
     @Override
     @ValidateBookingParams
@@ -152,9 +156,36 @@ public class AppointmentServiceImpl implements AppointmentServiceAPI {
             .build();
     }
 
+    private AppointmentResponseDTO buildResponseDTO(Booking booking,String message) {
+        return new AppointmentResponseDTO.Builder()
+            .withMessage(message)
+            .withBooking(booking)
+            .withProvider(booking.getProvider())
+            .withCode(200)
+            .build();
+    }
+
+    private AppointmentResponseDTO buildResponseDTO(String message) {
+        return new AppointmentResponseDTO.Builder()
+            .withMessage(message)
+            .withCode(200)
+            .build();
+    }
+
     @Override
     public ResponseEntity<AppointmentResponseDTO> retrieveAppointment(String id) {
-        return null;
+         try {
+                Long providerID = Long.parseLong(id);
+                Optional<Booking> booking = bookingRepository.findById(providerID);
+
+                return booking.map(p -> {
+                    return ResponseEntity.ok().body(buildResponseDTO(p, Constants.BOOKING_RETREIVED));
+                }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildResponseDTO(Constants.BOOKING_NOT_FOUND)));
+
+
+         }catch (NumberFormatException ex) {
+             return ResponseEntity.badRequest().body(buildResponseDTO("Invalid provider ID format"));
+         }
     }
 
     @Override
