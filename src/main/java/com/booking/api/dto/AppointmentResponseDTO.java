@@ -1,5 +1,6 @@
 package com.booking.api.dto;
 
+import com.booking.api.model.Booking;
 import com.booking.api.model.Patient;
 import com.booking.api.model.Provider;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -33,6 +34,9 @@ public class AppointmentResponseDTO {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private HashMap<Object,Object> patient;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private HashMap<Object,Object> booking;
+
     private AppointmentResponseDTO() {}
 
     public String getId() {
@@ -55,6 +59,9 @@ public class AppointmentResponseDTO {
         return patient;
     }
 
+    public HashMap<Object,Object> getBooking(){
+        return booking;
+    }
     public LocalDate getAppointmentDate(){
         return appointmentDate;
     }
@@ -145,6 +152,16 @@ public class AppointmentResponseDTO {
 
         public Builder withAppointmentTime(Time appointmentTime){
             responseDTO.appointmentTime = appointmentTime;
+            return this;
+        }
+
+        public Builder withBooking (Booking booking){
+            HashMap<Object, Object > response = new HashMap<>();
+            response.put("id", booking.getId());
+            response.put("time", booking.getTime());
+            response.put("date", booking.getDate());
+            response.put("status",booking.getBookingStatus());
+            responseDTO.booking = response;
             return this;
         }
 
