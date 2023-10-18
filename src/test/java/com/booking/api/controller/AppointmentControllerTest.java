@@ -95,7 +95,6 @@ public class AppointmentControllerTest {
     }
 
     @Test
-    @Ignore(value = "Need to fix this test case")
     public void shouldGive400WhenBookingTimeNotAvailable() throws Exception {
         AppointmentDTO appointmentDTO = new AppointmentDTO();
         appointmentDTO.setPatientID("10");
@@ -105,13 +104,12 @@ public class AppointmentControllerTest {
 
         String requestJSON = objectMapper.writeValueAsString(appointmentDTO);
 
-        //Create a sampleResponse
         AppointmentResponseDTO appointmentResponseDTO = new AppointmentResponseDTO.Builder()
             .withMessage(Constants.BOOKING_NOT_AVAILABLE_FOR_PARTICULAR_TIME)
             .build();
 
         ResponseEntity<AppointmentResponseDTO> responseEntity = ResponseEntity
-            .status(HttpStatus.CREATED).body(appointmentResponseDTO);
+            .status(HttpStatus.NOT_FOUND).body(appointmentResponseDTO);
 
         when(appointmentServiceAPI.createAppointment(appointmentDTO)).thenReturn(responseEntity);
 
@@ -128,5 +126,143 @@ public class AppointmentControllerTest {
 
         assertEquals(Constants.BOOKING_NOT_AVAILABLE_FOR_PARTICULAR_TIME, responseDTO.getMessage());
 
+    }
+
+    @Test
+    public void shouldGive400WhenBookingDateNotAvailable() throws Exception {
+        AppointmentDTO appointmentDTO = new AppointmentDTO();
+        appointmentDTO.setPatientID("10");
+        appointmentDTO.setProviderID("20");
+        appointmentDTO.setTime(Time.valueOf("10:00:00"));
+        appointmentDTO.setDate(LocalDate.now());
+
+        String requestJSON = objectMapper.writeValueAsString(appointmentDTO);
+
+        AppointmentResponseDTO appointmentResponseDTO = new AppointmentResponseDTO.Builder()
+            .withMessage(Constants.BOOKING_NOT_AVAILABLE_FOR_PARTICULAR_DATE)
+            .build();
+
+        ResponseEntity<AppointmentResponseDTO> responseEntity = ResponseEntity
+            .status(HttpStatus.NOT_FOUND).body(appointmentResponseDTO);
+
+        when(appointmentServiceAPI.createAppointment(appointmentDTO)).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/appointment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJSON)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isNotFound())
+            .andReturn();
+
+        //Validate the response
+        String content = result.getResponse().getContentAsString();
+        AppointmentResponseDTO responseDTO = objectMapper.readValue(content, AppointmentResponseDTO.class);
+
+        assertEquals(Constants.BOOKING_NOT_AVAILABLE_FOR_PARTICULAR_DATE, responseDTO.getMessage());
+
+    }
+
+    @Test
+    public void should403WhenBookingIsNotAvailable() throws Exception {
+        AppointmentDTO appointmentDTO = new AppointmentDTO();
+        appointmentDTO.setPatientID("10");
+        appointmentDTO.setProviderID("20");
+        appointmentDTO.setTime(Time.valueOf("10:00:00"));
+        appointmentDTO.setDate(LocalDate.now());
+
+        String requestJSON = objectMapper.writeValueAsString(appointmentDTO);
+
+        AppointmentResponseDTO appointmentResponseDTO = new AppointmentResponseDTO.Builder()
+            .withMessage(Constants.BOOKING_NOT_AVAILABLE)
+            .build();
+
+        ResponseEntity<AppointmentResponseDTO> responseEntity = ResponseEntity
+            .status(HttpStatus.FORBIDDEN).body(appointmentResponseDTO);
+
+        when(appointmentServiceAPI.createAppointment(appointmentDTO)).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/appointment")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJSON)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isForbidden())
+            .andReturn();
+
+        //Validate the response
+        String content = result.getResponse().getContentAsString();
+        AppointmentResponseDTO responseDTO = objectMapper.readValue(content, AppointmentResponseDTO.class);
+
+        assertEquals(Constants.BOOKING_NOT_AVAILABLE, responseDTO.getMessage());
+
+    }
+
+    @Test
+    public void shouldGive200AfterAppointmentIsDeleted() throws Exception {
+        String id = "10";
+        AppointmentDTO appointmentDTO = new AppointmentDTO();
+        appointmentDTO.setPatientID("10");
+        appointmentDTO.setProviderID("20");
+        appointmentDTO.setTime(Time.valueOf("10:00:00"));
+        appointmentDTO.setDate(LocalDate.now());
+
+        String requestJSON = objectMapper.writeValueAsString(appointmentDTO);
+
+        //Create a sampleResponse
+        AppointmentResponseDTO appointmentResponseDTO = new AppointmentResponseDTO.Builder()
+            .withMessage(Constants.BOOKING_DELETED)
+            .build();
+
+        ResponseEntity<AppointmentResponseDTO> responseEntity = ResponseEntity
+            .status(HttpStatus.CREATED).body(appointmentResponseDTO);
+
+        when(appointmentServiceAPI.deleteAppointment(id)).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/appointment/{id}", id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJSON)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().is2xxSuccessful())
+            .andReturn();
+
+        //Validate the response
+        String content = result.getResponse().getContentAsString();
+        AppointmentResponseDTO responseDTO = objectMapper.readValue(content, AppointmentResponseDTO.class);
+
+        assertEquals(Constants.BOOKING_DELETED, responseDTO.getMessage());
+    }
+
+    @Test
+    public void shouldGive404WhenBookingIsNotFoundForDelted() throws Exception {
+        String id = "10";
+        AppointmentDTO appointmentDTO = new AppointmentDTO();
+        appointmentDTO.setPatientID("10");
+        appointmentDTO.setProviderID("20");
+        appointmentDTO.setTime(Time.valueOf("10:00:00"));
+        appointmentDTO.setDate(LocalDate.now());
+
+        String requestJSON = objectMapper.writeValueAsString(appointmentDTO);
+
+        //Create a sampleResponse
+        AppointmentResponseDTO appointmentResponseDTO = new AppointmentResponseDTO.Builder()
+            .withMessage(Constants.BOOKING_NOT_FOUND)
+            .build();
+
+        ResponseEntity<AppointmentResponseDTO> responseEntity = ResponseEntity
+            .status(HttpStatus.NOT_FOUND).body(appointmentResponseDTO);
+
+        when(appointmentServiceAPI.deleteAppointment(id)).thenReturn(responseEntity);
+
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.delete("/api/v1/appointment/{id}", id)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestJSON)
+                .accept(MediaType.APPLICATION_JSON))
+            .andExpect(MockMvcResultMatchers.status().isNotFound())
+            .andReturn();
+
+        //Validate the response
+        String content = result.getResponse().getContentAsString();
+        AppointmentResponseDTO responseDTO = objectMapper.readValue(content, AppointmentResponseDTO.class);
+
+        assertEquals(Constants.BOOKING_NOT_FOUND, responseDTO.getMessage());
     }
 }
