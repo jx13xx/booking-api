@@ -6,9 +6,11 @@ import lombok.*;
 import java.util.List;
 
 
-@Data
+
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 @Entity
 public class Provider {
 
