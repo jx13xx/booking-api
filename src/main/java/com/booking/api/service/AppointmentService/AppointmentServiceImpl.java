@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Time;
 import java.time.LocalDate;
@@ -51,24 +52,33 @@ public class AppointmentServiceImpl implements AppointmentServiceAPI {
                 .body(buildResponseDTO(appointmentDTO, provider.get(), patient.get(), Constants.BOOKING_NOT_AVAILABLE));
         }
 
-        return proceedBooking(appointmentDTO, provider, patient);
+        return proceedBooking(appointmentDTO, provider, patient, BookingStatus.PENDING);
    }
 
-    private ResponseEntity<AppointmentResponseDTO> proceedBooking(AppointmentDTO appointmentDTO, Optional<Provider> provider, Optional<Patient> patient) {
-        saveBooking(appointmentDTO, provider, patient);
+    private ResponseEntity<AppointmentResponseDTO> proceedBooking(AppointmentDTO appointmentDTO, Optional<Provider> provider, Optional<Patient> patient, BookingStatus bookingStatus) {
+        saveBooking(appointmentDTO, provider, patient, bookingStatus);
         return ResponseEntity.status(201).body(buildResponseDTO(appointmentDTO, provider.get(), patient.get(), Constants.BOOKING_SAVE_SUCCESSFULLY));
     }
 
-    private void saveBooking(AppointmentDTO appointmentDTO, Optional<Provider> provider, Optional<Patient> patient) {
+    private ResponseEntity<AppointmentResponseDTO> proceedBooking(AppointmentDTO appointmentDTO, Optional<Provider> provider, Optional<Patient> patient, BookingStatus bookingStatus, String id) {
+        updateBooking(appointmentDTO, provider, patient, bookingStatus, Long.valueOf(id));
+        return ResponseEntity.status(200).body(buildResponseDTO(appointmentDTO, provider.get(), patient.get(), Constants.BOOKING_UPDATED_SUCCESSFULLY));
+    }
+
+    private void saveBooking(AppointmentDTO appointmentDTO, Optional<Provider> provider, Optional<Patient> patient, BookingStatus bookingStatus) {
         Booking booking = new Booking();
         booking.setTime(appointmentDTO.getTime().toLocalTime());
         booking.setDate(appointmentDTO.getDate());
         booking.setPatientId(patient.get().getPatientID());
-        booking.setBookingStatus(BookingStatus.PENDING);
+        booking.setBookingStatus(bookingStatus);
         booking.setProvider(provider.get());
 
         provider.get().getBookings().add(booking);
         providerRepository.save(provider.get());
+    }
+
+    private void updateBooking(AppointmentDTO appointmentDTO, Optional<Provider> provider, Optional<Patient> patient, BookingStatus bookingStatus, Long bookingId) {
+        bookingRepository.updateDateAndTimeAndStatusById(appointmentDTO.getDate(), appointmentDTO.getTime().toLocalTime(), bookingStatus, bookingId);
     }
 
 
@@ -145,10 +155,21 @@ public class AppointmentServiceImpl implements AppointmentServiceAPI {
                 .withCode(403)
                 .withProvider(provider, true)
                 .build();
+        } else if(message.equals(Constants.BOOKING_SAVE_SUCCESSFULLY)){
+            return new AppointmentResponseDTO.Builder()
+                .withMessage(message)
+                .withCode(201)
+                .withId(provider.getBookings().get(0).getId().toString())
+                .withAppointmentDate(appointmentDTO.getDate())
+                .withAppointmentTime(appointmentDTO.getTime())
+                .withProvider(provider)
+                .withPatient(patient)
+                .build();
         }
         return new AppointmentResponseDTO.Builder()
             .withMessage(message)
-            .withCode(201)
+            .withCode(200)
+            .withId(provider.getBookings().get(0).getId().toString())
             .withAppointmentDate(appointmentDTO.getDate())
             .withAppointmentTime(appointmentDTO.getTime())
             .withProvider(provider)
@@ -168,7 +189,7 @@ public class AppointmentServiceImpl implements AppointmentServiceAPI {
     private AppointmentResponseDTO buildResponseDTO(String message) {
         return new AppointmentResponseDTO.Builder()
             .withMessage(message)
-            .withCode(200)
+            .withCode(message.equals(Constants.BOOKING_NOT_FOUND) ? 404 : 200)
             .build();
     }
 
@@ -190,11 +211,54 @@ public class AppointmentServiceImpl implements AppointmentServiceAPI {
 
     @Override
     public ResponseEntity<AppointmentResponseDTO> deleteAppointment(String id) {
-        return null;
+        try {
+            Long providerID = Long.parseLong(id);
+            Optional<Booking> booking = bookingRepository.findById(providerID);
+
+            return booking.map(p -> {
+                bookingRepository.delete(p);
+                return ResponseEntity.ok().body(buildResponseDTO(Constants.BOOKING_DELETED));
+            }).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildResponseDTO(Constants.BOOKING_NOT_FOUND)));
+
+        } catch (NumberFormatException ex) {
+            return ResponseEntity.badRequest().body(buildResponseDTO("Invalid provider ID format"));
+        }
     }
 
     @Override
+    @ValidateBookingParams
+    @Transactional
     public ResponseEntity<AppointmentResponseDTO> updateAppointment(AppointmentDTO appointmentDTO, String id) {
+        Optional<Provider> provider = getProvider(appointmentDTO);
+        Optional<Patient> patient = getPatient(appointmentDTO);
+        ResponseEntity<AppointmentResponseDTO> BOOKING_NOT_FOUND = retrieveBookingWithId(id);
+        if (BOOKING_NOT_FOUND != null) return BOOKING_NOT_FOUND;
+
+        if (!isBookingDateAvailable(appointmentDTO, provider)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(buildResponseDTO(appointmentDTO, provider.get(), patient.get(), Constants.BOOKING_NOT_AVAILABLE_FOR_PARTICULAR_DATE));
+        }
+
+        if (!isBookingTimeAvailable(appointmentDTO, provider)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(buildResponseDTO(appointmentDTO, provider.get(), patient.get(), Constants.BOOKING_NOT_AVAILABLE_FOR_PARTICULAR_TIME));
+        }
+
+        if (isBookingConflicting(appointmentDTO, provider)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(buildResponseDTO(appointmentDTO, provider.get(), patient.get(), Constants.BOOKING_NOT_AVAILABLE));
+        }
+
+        return proceedBooking(appointmentDTO, provider, patient, BookingStatus.UPDATED, id);
+
+    }
+
+    private ResponseEntity<AppointmentResponseDTO> retrieveBookingWithId(String id) {
+        ResponseEntity<AppointmentResponseDTO> retirevedBooking = retrieveAppointment(id);
+
+        if(retirevedBooking.getStatusCode().is4xxClientError()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildResponseDTO(Constants.BOOKING_NOT_FOUND));
+        }
         return null;
     }
 }

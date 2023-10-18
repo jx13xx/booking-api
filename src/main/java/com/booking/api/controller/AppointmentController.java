@@ -4,6 +4,7 @@ import com.booking.api.dto.AppointmentDTO;
 import com.booking.api.dto.AppointmentResponseDTO;
 import com.booking.api.exceptions.validation.ValidationErrorHandler;
 import com.booking.api.service.AppointmentService.AppointmentServiceAPI;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -68,6 +69,57 @@ public class AppointmentController {
             throw ex;
         }
             return ResponseEntity.status(httpStatus).body(appointmentResponseDTO);
+    }
+
+
+    @DeleteMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> deleteAppointment(@PathVariable String id){
+        HttpStatus httpStatus = HttpStatus.OK;
+        AppointmentResponseDTO appointmentResponseDTO = null;
+
+        try {
+            ResponseEntity<AppointmentResponseDTO> clientResponse = appointmentServiceAPI.deleteAppointment(id);
+            if(clientResponse.getStatusCode().is2xxSuccessful()) {
+                appointmentResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+            } else if (clientResponse.getStatusCode().is4xxClientError()) {
+                appointmentResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+            } else {
+                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+
+        }catch (Exception ex) {
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            throw ex;
+        }
+            return ResponseEntity.status(httpStatus).body(appointmentResponseDTO);
+    }
+
+    @PutMapping(value = "{id}", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @ValidationErrorHandler
+    public ResponseEntity<?> updateAppointment(@Valid @RequestBody AppointmentDTO appointmentDTO, @PathVariable String id) throws JsonProcessingException {
+        HttpStatus httpStatus = HttpStatus.OK;
+        AppointmentResponseDTO appointmentResponseDTO = null;
+
+        try{
+            ResponseEntity<AppointmentResponseDTO> clientResponse = appointmentServiceAPI.updateAppointment(appointmentDTO, id);
+            if(clientResponse.getStatusCode().is2xxSuccessful()){
+                appointmentResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+            }else if(clientResponse.getStatusCode().is4xxClientError()){
+                appointmentResponseDTO = clientResponse.getBody();
+                httpStatus = (HttpStatus) clientResponse.getStatusCode();
+            }else{
+                httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+        }catch (Exception ex){
+            httpStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+            throw ex;
+        }
+
+        return ResponseEntity.status(httpStatus).body(appointmentResponseDTO);
+
     }
 
 }

@@ -2,6 +2,7 @@ package com.booking.api.service.AppointmentService;
 
 import com.booking.api.dto.AppointmentDTO;
 import com.booking.api.dto.AppointmentResponseDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.http.ResponseEntity;
 
 public interface AppointmentServiceAPI {
@@ -12,5 +13,5 @@ public interface AppointmentServiceAPI {
 
     ResponseEntity<AppointmentResponseDTO> deleteAppointment(String id);
 
-    ResponseEntity<AppointmentResponseDTO> updateAppointment(AppointmentDTO appointmentDTO,String id);
+    ResponseEntity<AppointmentResponseDTO> updateAppointment(AppointmentDTO appointmentDTO,String id) throws JsonProcessingException;
 }

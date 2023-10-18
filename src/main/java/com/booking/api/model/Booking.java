@@ -7,8 +7,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 
-@Data
 @Entity
+@Getter
+@Setter
+
 public class Booking {
 
     private @Id @GeneratedValue(strategy = GenerationType.IDENTITY) Long id;
